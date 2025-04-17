@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbitrage Betting Calculator</title>
+    <title>Sophisticated Arbitrage Calculator</title>
     <style>
-        body {
+        /* (Keep the same CSS styles as the previous version - no changes needed here) */
+         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             padding: 20px;
@@ -13,23 +14,27 @@
             color: #333;
         }
         .container {
-            max-width: 700px;
+            max-width: 750px; /* Slightly wider */
             margin: 20px auto;
             background-color: #fff;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        h1, h2, h3 {
             color: #005f73; /* Teal blue */
-            text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+             border-bottom: 1px solid #eee;
+             padding-bottom: 5px;
         }
-        .input-section, .results-section {
+         h1 { text-align: center; border-bottom-width: 2px;}
+
+        .input-section, .results-section, .rounding-section {
             margin-bottom: 25px;
             padding: 20px;
             border: 1px solid #ddd;
             border-radius: 6px;
+            background-color: #fff; /* Ensure white background */
         }
         .input-group {
             margin-bottom: 15px;
@@ -43,17 +48,27 @@
             font-weight: 600;
             color: #333;
         }
-        .input-group input[type="number"] {
+        .input-group input[type="number"], .input-group select { /* Style select too */
             flex-grow: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             min-width: 100px;
         }
+         .radio-group label {
+             flex-basis: auto; /* Override for radio labels */
+             margin-right: 15px;
+             margin-left: 5px;
+             font-weight: normal;
+         }
+         .radio-group input[type="radio"] {
+             margin-right: 5px;
+         }
+
         button {
-            display: block;
-            width: 100%;
-            padding: 12px 20px;
+            display: inline-block; /* Allow side-by-side */
+            width: auto; /* Auto width */
+            padding: 12px 25px; /* Adjust padding */
             background-color: #0a9396; /* Vibrant teal */
             color: white;
             border: none;
@@ -61,41 +76,57 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
+            margin-right: 10px; /* Space between buttons */
             transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #005f73; /* Darker teal */
         }
-        #results {
-            margin-top: 20px;
+         button.secondary {
+             background-color: #ee9b00; /* Orange for secondary action */
+         }
+         button.secondary:hover {
+             background-color: #ca6702;
+         }
+        #results-optimal, #results-rounded {
+            margin-top: 15px;
             padding: 15px;
             background-color: #e0fbfc; /* Light cyan background */
             border-left: 5px solid #0a9396; /* Teal border */
             border-radius: 4px;
+            line-height: 1.7;
         }
-        #results p {
-            margin: 10px 0;
+        #results-rounded {
+             background-color: #fff3e0; /* Light orange background */
+             border-left-color: #ee9b00; /* Orange border */
+        }
+
+        #results-optimal p, #results-rounded p {
+            margin: 8px 0;
             font-size: 1.05em;
         }
         .highlight { font-weight: bold; }
         .profit { color: #2d6a4f; font-weight: bold; } /* Dark green */
-        .no-arb { color: #ae2012; font-weight: bold; } /* Reddish */
+        .loss { color: #ae2012; font-weight: bold; } /* Reddish */
+        .no-arb { color: #ae2012; font-weight: bold; }
         .bet-details { margin-left: 20px; }
+        .outcome-profit { margin-left: 15px; padding: 5px; border-bottom: 1px dashed #ccc;}
+        .outcome-profit:last-child { border-bottom: none; }
+        .strategy-note { font-style: italic; color: #555; font-size: 0.95em; margin-top: 10px;}
         .error { color: #d00000; text-align: center; margin-top: 10px; font-weight: bold; }
-
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Arbitrage Betting Calculator</h1>
+    <h1>Sophisticated Arbitrage Calculator</h1>
 
+    <!-- Input Section -->
     <div class="input-section">
-        <h2>Enter Odds & Investment</h2>
-
-        <p style="text-align: center; color: #555; margin-bottom: 20px;">Enter decimal odds from two bookmakers for a 2-outcome event.</p>
-
+        <h2>1. Enter Odds & Investment</h2>
+        <!-- Input fields -->
         <h3>Bookmaker 1</h3>
         <div class="input-group">
             <label for="b1-oddsA">Odds for A:</label>
@@ -105,7 +136,6 @@
             <label for="b1-oddsB">Odds for B:</label>
             <input type="number" id="b1-oddsB" step="0.01" min="1.01" placeholder="e.g., 1.85">
         </div>
-
         <h3 style="margin-top: 20px;">Bookmaker 2</h3>
         <div class="input-group">
             <label for="b2-oddsA">Odds for A:</label>
@@ -115,126 +145,257 @@
             <label for="b2-oddsB">Odds for B:</label>
             <input type="number" id="b2-oddsB" step="0.01" min="1.01" placeholder="e.g., 2.05">
         </div>
-
-         <hr style="margin: 25px 0; border-top: 1px solid #eee;">
-
+        <hr style="margin: 25px 0; border-top: 1px solid #eee;">
         <div class="input-group">
-            <label for="total-investment">Total Investment ($):</label>
+            <label for="total-investment">Target Investment ($):</label>
             <input type="number" id="total-investment" step="0.01" min="1" placeholder="e.g., 100">
         </div>
-
-        <button id="calculateBtn">Check for Arbitrage & Calculate Stakes</button>
+        <button id="calculateBtn">Find Optimal Arbitrage</button>
         <p id="error-message" class="error hidden"></p>
     </div>
 
-    <div class="results-section">
-        <h2>Results</h2>
-        <div id="results">
-            <p>Please enter odds and investment amount and click calculate.</p>
+    <!-- Optimal Results Section -->
+    <div id="optimal-results-section" class="results-section hidden">
+         <h2>2. Optimal Arbitrage Results</h2>
+         <div id="results-optimal"></div>
+    </div>
+
+    <!-- Rounding Options Section -->
+    <div id="rounding-options-section" class="rounding-section hidden">
+        <h2>3. Explore Rounded Stakes (Optional Disguise)</h2>
+        <p>Analyze outcomes if stakes are rounded. The calculator will find the best rounded pair (if any) that still guarantees profit, maximizing the minimum possible return.</p>
+        <div class="input-group radio-group">
+            <label style="flex-basis: auto;">Rounding Precision:</label>
+            <input type="radio" id="round-none" name="rounding" value="0" checked>
+            <label for="round-none">No Rounding (Show Optimal)</label>
+            <input type="radio" id="round-5" name="rounding" value="5">
+            <label for="round-5">Nearest $5</label>
+            <input type="radio" id="round-10" name="rounding" value="10">
+            <label for="round-10">Nearest $10</label>
         </div>
+        <button id="calculateRoundedBtn" class="secondary">Analyze Rounded Options</button>
+    </div>
+
+     <!-- Rounded Results Section -->
+    <div id="rounded-results-section" class="results-section hidden">
+         <h2>4. Sophisticated Rounded Stake Analysis</h2>
+         <div id="results-rounded"></div>
     </div>
 
 </div>
 
 <script>
+    // --- DOM Elements ---
     const b1OddsAInput = document.getElementById('b1-oddsA');
     const b1OddsBInput = document.getElementById('b1-oddsB');
     const b2OddsAInput = document.getElementById('b2-oddsA');
     const b2OddsBInput = document.getElementById('b2-oddsB');
     const totalInvestmentInput = document.getElementById('total-investment');
     const calculateBtn = document.getElementById('calculateBtn');
-    const resultsDiv = document.getElementById('results');
     const errorMessage = document.getElementById('error-message');
+    const optimalResultsSection = document.getElementById('optimal-results-section');
+    const resultsOptimalDiv = document.getElementById('results-optimal');
+    const roundingOptionsSection = document.getElementById('rounding-options-section');
+    const calculateRoundedBtn = document.getElementById('calculateRoundedBtn');
+    const roundedResultsSection = document.getElementById('rounded-results-section');
+    const resultsRoundedDiv = document.getElementById('results-rounded');
 
+    // --- State ---
+    let optimalArbData = null;
+
+    // --- Utility Functions ---
     function formatCurrency(amount) {
         return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-
-    function hideError() {
-        errorMessage.classList.add('hidden');
-        errorMessage.textContent = '';
-    }
-
+    function hideError() { errorMessage.classList.add('hidden'); errorMessage.textContent = ''; }
     function showError(message) {
         errorMessage.textContent = message;
         errorMessage.classList.remove('hidden');
-        resultsDiv.innerHTML = '<p>Calculation failed due to input error.</p>'; // Clear previous results
+        resultsOptimalDiv.innerHTML = '<p>Calculation failed due to input error.</p>';
+        optimalResultsSection.classList.add('hidden');
+        roundingOptionsSection.classList.add('hidden');
+        roundedResultsSection.classList.add('hidden');
+        optimalArbData = null;
     }
+    // Precise rounding functions
+    function roundDown(value, precision) { return Math.floor(value / precision) * precision; }
+    function roundUp(value, precision) { return Math.ceil(value / precision) * precision; }
 
+
+    // --- Optimal Calculation ---
     calculateBtn.addEventListener('click', () => {
+        // Reset UI
         hideError();
-        resultsDiv.innerHTML = ''; // Clear previous results
+        resultsOptimalDiv.innerHTML = '';
+        optimalResultsSection.classList.add('hidden');
+        roundingOptionsSection.classList.add('hidden');
+        roundedResultsSection.classList.add('hidden');
+        optimalArbData = null;
 
-        // --- 1. Get and Validate Inputs ---
+        // Get & Validate Inputs
         const b1A = parseFloat(b1OddsAInput.value);
         const b1B = parseFloat(b1OddsBInput.value);
         const b2A = parseFloat(b2OddsAInput.value);
         const b2B = parseFloat(b2OddsBInput.value);
-        const totalInvestment = parseFloat(totalInvestmentInput.value);
+        const targetInvestment = parseFloat(totalInvestmentInput.value); // Changed name for clarity
 
         if (isNaN(b1A) || isNaN(b1B) || isNaN(b2A) || isNaN(b2B) || b1A <= 1 || b1B <= 1 || b2A <= 1 || b2B <= 1) {
-            showError('Please enter valid decimal odds (> 1.00) for all fields.');
-            return;
+            showError('Please enter valid decimal odds (> 1.00) for all fields.'); return;
         }
-        if (isNaN(totalInvestment) || totalInvestment <= 0) {
-            showError('Please enter a valid positive Total Investment amount.');
-            return;
+        if (isNaN(targetInvestment) || targetInvestment <= 0) {
+            showError('Please enter a valid positive Target Investment amount.'); return;
         }
 
-        // --- 2. Find Best Odds ---
+        // Find Best Odds
         const bestOddA = Math.max(b1A, b2A);
         const bookieForA = (bestOddA === b1A) ? 'Bookmaker 1' : 'Bookmaker 2';
-
         const bestOddB = Math.max(b1B, b2B);
         const bookieForB = (bestOddB === b1B) ? 'Bookmaker 1' : 'Bookmaker 2';
 
-        // --- 3. Calculate Implied Probabilities & Check for Arbitrage ---
+        // Check for Arbitrage
         const impliedProbA = 1 / bestOddA;
         const impliedProbB = 1 / bestOddB;
         const totalImpliedProb = impliedProbA + impliedProbB;
 
-        // --- 4. Calculate Results and Display ---
         if (totalImpliedProb < 1) {
-            // Arbitrage Opportunity Found!
+            // Arb Found!
             const profitMarginPercentage = ((1 / totalImpliedProb) - 1) * 100;
+            // Calculate stakes based on TARGET investment, might differ slightly from final rounded total
+            const stakeA = (targetInvestment * impliedProbA) / totalImpliedProb;
+            const stakeB = (targetInvestment * impliedProbB) / totalImpliedProb;
+            const actualOptimalInvestment = stakeA + stakeB; // Use the sum of calculated stakes
+            const guaranteedReturn = actualOptimalInvestment / totalImpliedProb; // Or stakeA * bestOddA
+            const guaranteedProfit = guaranteedReturn - actualOptimalInvestment;
 
-            // Calculate Stakes
-            const stakeA = (totalInvestment * impliedProbA) / totalImpliedProb;
-            const stakeB = (totalInvestment * impliedProbB) / totalImpliedProb;
+            optimalArbData = {
+                bestOddA: bestOddA, bookieForA: bookieForA, stakeA: stakeA,
+                bestOddB: bestOddB, bookieForB: bookieForB, stakeB: stakeB,
+                targetInvestment: targetInvestment, // Keep track of user's target
+                actualOptimalInvestment: actualOptimalInvestment, // Store the precise total
+                guaranteedProfit: guaranteedProfit, profitMarginPercentage: profitMarginPercentage
+            };
 
-            // Calculate Return & Profit
-            const guaranteedReturn = totalInvestment / totalImpliedProb; // Or stakeA * bestOddA
-            const guaranteedProfit = guaranteedReturn - totalInvestment;
-
-            resultsDiv.innerHTML = `
-                <p><strong class="profit">Arbitrage Opportunity Found!</strong></p>
-                <p>Potential Profit Margin: <span class="highlight profit">${profitMarginPercentage.toFixed(2)}%</span></p>
-                <p>Total Investment: <span class="highlight">${formatCurrency(totalInvestment)}</span></p>
+            // Display Optimal Results
+            resultsOptimalDiv.innerHTML = `
+                <p><strong class="profit">Optimal Arbitrage Found!</strong></p>
+                <p>Optimal Profit Margin: <span class="highlight profit">${profitMarginPercentage.toFixed(2)}%</span></p>
+                <p>Optimal Total Investment: <span class="highlight">${formatCurrency(actualOptimalInvestment)}</span> (based on precise stakes)</p>
                 <hr>
-                <p><span class="highlight">Bet on Outcome A:</span></p>
-                <p class="bet-details">Bookmaker: <span class="highlight">${bookieForA}</span></p>
-                <p class="bet-details">Odds: <span class="highlight">${bestOddA.toFixed(2)}</span></p>
-                <p class="bet-details">Stake: <span class="highlight profit">${formatCurrency(stakeA)}</span></p>
-                 <hr>
-                <p><span class="highlight">Bet on Outcome B:</span></p>
-                 <p class="bet-details">Bookmaker: <span class="highlight">${bookieForB}</span></p>
-                <p class="bet-details">Odds: <span class="highlight">${bestOddB.toFixed(2)}</span></p>
-                <p class="bet-details">Stake: <span class="highlight profit">${formatCurrency(stakeB)}</span></p>
+                <p><span class="highlight">Optimal Bet on A:</span> ${formatCurrency(stakeA)} @ ${bestOddA.toFixed(2)} (${bookieForA})</p>
+                <p><span class="highlight">Optimal Bet on B:</span> ${formatCurrency(stakeB)} @ ${bestOddB.toFixed(2)} (${bookieForB})</p>
                 <hr>
                 <p>Guaranteed Return: <span class="highlight profit">${formatCurrency(guaranteedReturn)}</span></p>
                 <p>Guaranteed Profit: <span class="highlight profit">${formatCurrency(guaranteedProfit)}</span></p>
             `;
+            optimalResultsSection.classList.remove('hidden');
+            roundingOptionsSection.classList.remove('hidden');
+            document.getElementById('round-none').checked = true;
+            roundedResultsSection.classList.add('hidden');
 
         } else {
-            // No Arbitrage Opportunity
+            // No Arb
             const bookieMarginPercentage = (totalImpliedProb - 1) * 100;
-             resultsDiv.innerHTML = `
+             resultsOptimalDiv.innerHTML = `
                 <p><strong class="no-arb">No Arbitrage Opportunity Found.</strong></p>
-                <p>The sum of the best implied probabilities is ${totalImpliedProb.toFixed(4)} (${(totalImpliedProb * 100).toFixed(2)}%).</p>
-                 <p>This represents a combined bookmaker margin of approximately <span class="highlight no-arb">${bookieMarginPercentage.toFixed(2)}%</span> using the best available odds.</p>
+                <p>Combined implied probability using best odds is ${(totalImpliedProb * 100).toFixed(2)}%.</p>
+                 <p>Implied bookmaker margin is approx. <span class="highlight no-arb">${bookieMarginPercentage.toFixed(2)}%</span>.</p>
                  <p>Best odds identified: A @ ${bestOddA.toFixed(2)} (${bookieForA}), B @ ${bestOddB.toFixed(2)} (${bookieForB}).</p>
             `;
+             optimalResultsSection.classList.remove('hidden');
         }
+    });
+
+    // --- Sophisticated Rounded Calculation ---
+    calculateRoundedBtn.addEventListener('click', () => {
+        resultsRoundedDiv.innerHTML = ''; // Clear previous rounded results
+        roundedResultsSection.classList.add('hidden'); // Hide initially
+
+        if (!optimalArbData) {
+             resultsRoundedDiv.innerHTML = "<p class='error'>Error: Optimal data not available. Please calculate optimal arbitrage first.</p>";
+             roundedResultsSection.classList.remove('hidden');
+            return;
+        }
+
+        const roundingValue = parseInt(document.querySelector('input[name="rounding"]:checked').value);
+        const { bestOddA, bookieForA, stakeA, bestOddB, bookieForB, stakeB, guaranteedProfit } = optimalArbData;
+
+        // If "No Rounding" selected, just show optimal again or a simple message
+        if (roundingValue === 0) {
+             resultsRoundedDiv.innerHTML = "<p>No rounding selected. Optimal results shown above.</p>";
+             roundedResultsSection.classList.remove('hidden');
+             return;
+        }
+
+        // Generate potential rounded stakes for A and B
+        const candidatesA = [roundDown(stakeA, roundingValue), roundUp(stakeA, roundingValue)];
+        const candidatesB = [roundDown(stakeB, roundingValue), roundUp(stakeB, roundingValue)];
+        // Remove duplicates if stake was already a multiple of roundingValue
+        const uniqueCandidatesA = [...new Set(candidatesA)].filter(s => s > 0); // Ensure positive stakes
+        const uniqueCandidatesB = [...new Set(candidatesB)].filter(s => s > 0);
+
+        let evaluatedPairs = [];
+
+        // Iterate through all combinations
+        for (const rA of uniqueCandidatesA) {
+            for (const rB of uniqueCandidatesB) {
+                const totalRoundedInvestment = rA + rB;
+                const profitIfA = (rA * bestOddA) - totalRoundedInvestment;
+                const profitIfB = (rB * bestOddB) - totalRoundedInvestment;
+                const minimumProfit = Math.min(profitIfA, profitIfB);
+
+                // Store evaluation results for this pair
+                evaluatedPairs.push({
+                    roundedStakeA: rA,
+                    roundedStakeB: rB,
+                    totalInvestment: totalRoundedInvestment,
+                    profitA: profitIfA,
+                    profitB: profitIfB,
+                    minProfit: minimumProfit
+                });
+            }
+        }
+
+        // Filter for pairs where BOTH outcomes are profitable (guarantee maintained)
+        const profitablePairs = evaluatedPairs.filter(p => p.minProfit > 0);
+
+        if (profitablePairs.length === 0) {
+            // No rounded option guarantees profit
+            resultsRoundedDiv.innerHTML = `
+                <p><strong class="loss">Guarantee Broken!</strong></p>
+                <p>With rounding to the nearest $${roundingValue}, no combination of stakes guarantees a profit for both outcomes.</p>
+                <p>Sticking to the precise optimal stakes is recommended if a guarantee is required.</p>
+                <p class='strategy-note'>Analyzed ${evaluatedPairs.length} potential rounded stake combinations.</p>
+            `;
+        } else {
+            // Found profitable rounded pairs - select the best one
+            // Strategy: Maximize the minimum guaranteed profit
+            profitablePairs.sort((a, b) => b.minProfit - a.minProfit); // Sort descending by minProfit
+            const bestPair = profitablePairs[0];
+
+             resultsRoundedDiv.innerHTML = `
+                <p><strong class="profit">Best Rounded Option Found (Guarantee Maintained)</strong></p>
+                <p class="strategy-note">Strategy: Selected the rounded pair maximizing the minimum guaranteed profit.</p>
+                <p>Rounding Precision: <span class="highlight">$${roundingValue}</span></p>
+                <hr>
+                <p><span class="highlight">Selected Rounded Bet on A:</span> ${formatCurrency(bestPair.roundedStakeA)} @ ${bestOddA.toFixed(2)} (${bookieForA})</p>
+                <p><span class="highlight">Selected Rounded Bet on B:</span> ${formatCurrency(bestPair.roundedStakeB)} @ ${bestOddB.toFixed(2)} (${bookieForB})</p>
+                <p>Total Rounded Investment: <span class="highlight">${formatCurrency(bestPair.totalInvestment)}</span></p>
+                <hr>
+                <h3>Potential Outcomes with this Rounded Strategy:</h3>
+                 <div class="outcome-profit">
+                    If A Wins: Net Profit = <span class="profit">${formatCurrency(bestPair.profitA)}</span>
+                </div>
+                <div class="outcome-profit">
+                     If B Wins: Net Profit = <span class="profit">${formatCurrency(bestPair.profitB)}</span>
+                </div>
+                <hr>
+                 <p>Minimum Guaranteed Profit (with this rounding): <span class="highlight profit">${formatCurrency(bestPair.minProfit)}</span></p>
+                 <p><small>Compare to optimal guaranteed profit: ${formatCurrency(guaranteedProfit)}</small></p>
+                 <p class='strategy-note'>Found ${profitablePairs.length} rounded combinations (out of ${evaluatedPairs.length} total) that maintained a guaranteed profit.</p>
+            `;
+        }
+
+        roundedResultsSection.classList.remove('hidden'); // Show the results
     });
 
 </script>
